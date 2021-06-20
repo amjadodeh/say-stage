@@ -37,17 +37,17 @@ setInterval(() => {
 
 /********** Background Stuff **********/
 
-let prevBackgrounds = ['http://127.0.0.1:5500/defaultBackgrounds/1.mp4'];
+document.querySelector('.topic').value = 'nature';
 
-let topic = 'nature';
+let prevBackgrounds = [];
 
-let fetchUrl = 'https://api.pexels.com/videos/search?query=';
+const fetchUrl = 'https://api.pexels.com/videos/search?query=';
 
-let fetchBackgroundVideo = (url) => {
+const fetchBackgroundVideo = (url) => {
   fetch(url, {
     method: 'get',
     headers: {
-      Authorization: '563492ad6f91700001000001e6dc0d922c664b3b995eedd2333b7b68',
+      Authorization: '563492ad6f91700001000001343ed614cc24450cb5d792783af9c05d',
       'Content-Type': 'application/json',
     },
     mode: 'cors',
@@ -65,7 +65,7 @@ let fetchBackgroundVideo = (url) => {
     });
 };
 
-let findBestVideoQuality = (i, responseJson) => {
+const findBestVideoQuality = (i, responseJson) => {
   for (let n = 0; n < responseJson.videos[i].video_files.length; n++) {
     if (
       responseJson.videos[i].video_files[n].height ===
@@ -88,34 +88,61 @@ let findBestVideoQuality = (i, responseJson) => {
   return 1;
 };
 
-function displayBackgroundVideo(responseJson) {
+const displayBackgroundVideo = (responseJson) => {
   if (responseJson.videos.length === 0) {
-    source.src = '/defaultBackgrounds/1.mp4';
-    video.load();
     console.log(prevBackgrounds);
     console.log('No videos for this topic...');
   } else {
-    let currentBackground = 0;
-    setInterval(() => {
-      let newBackgroundIndex = findBestVideoQuality(
-        currentBackground,
-        responseJson
-      );
-      if (prevBackgrounds.includes(source.src)) {
-        source.src =
-          responseJson.videos[currentBackground].video_files[
-            newBackgroundIndex
-          ].link;
-        prevBackgrounds.push(
-          responseJson.videos[currentBackground].video_files[newBackgroundIndex]
-            .link
+    let currentTopic = document.querySelector('.topic').value;
+    let currentVideoIndex = 0;
+
+    var videoChanger = setInterval(() => {
+      if (currentVideoIndex < responseJson.videos.length) {
+        let bestQualityVideoIndex = findBestVideoQuality(
+          currentVideoIndex,
+          responseJson
         );
-        currentBackground += 1;
+        if (
+          !prevBackgrounds.includes(
+            responseJson.videos[currentVideoIndex].video_files[
+              bestQualityVideoIndex
+            ].link
+          )
+        ) {
+          source.src =
+            responseJson.videos[currentVideoIndex].video_files[
+              bestQualityVideoIndex
+            ].link;
+          prevBackgrounds.push(
+            responseJson.videos[currentVideoIndex].video_files[
+              bestQualityVideoIndex
+            ].link
+          );
+          currentVideoIndex += 1;
+          video.load();
+          console.log(prevBackgrounds);
+        }
+      } else {
+        let bestQualityVideoIndex = findBestVideoQuality(0, responseJson);
+        source.src =
+          responseJson.videos[0].video_files[bestQualityVideoIndex].link;
+        prevBackgrounds = [
+          responseJson.videos[0].video_files[bestQualityVideoIndex].link,
+        ];
+        currentVideoIndex = 1;
         video.load();
         console.log(prevBackgrounds);
       }
+
+      if (currentTopic !== document.querySelector('.topic').value) {
+        clearInterval(videoChanger);
+        console.log('cleared interval');
+        prevBackgrounds = [];
+        currentTopic = document.querySelector('.topic').value;
+        fetchBackgroundVideo(fetchUrl + document.querySelector('.topic').value);
+      }
     }, 20000);
   }
-}
+};
 
-fetchBackgroundVideo(fetchUrl + topic);
+fetchBackgroundVideo(fetchUrl + document.querySelector('.topic').value);
