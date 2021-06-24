@@ -55,6 +55,13 @@ const fetchBackgroundVideos = (url) => {
     .then((response) => {
       if (response.ok) {
         return response.json();
+      } else if (url === 'https://api.pexels.com/videos/search?query=') {
+        setTimeout(() => {
+          fetchBackgroundVideos(
+            fetchUrl + document.querySelector('.topic').value
+          );
+        }, 20000);
+        throw new Error('No topic');
       } else {
         throw new Error('BAD HTTP stuff');
       }
@@ -119,13 +126,15 @@ const useNewBackgroundVideos = (responseJson) => {
   let currentTopic = document.querySelector('.topic').value;
   let currentVideoIndex = 1;
 
-  changeBackgroundVideo(responseJson, 0);
+  if (responseJson.videos.length === 0) {
+    console.log(prevBackgrounds);
+    console.log('No videos for this topic...');
+  } else {
+    changeBackgroundVideo(responseJson, 0);
+  }
 
   var videosLoop = setInterval(() => {
-    if (responseJson.videos.length === 0) {
-      console.log(prevBackgrounds);
-      console.log('No videos for this topic...');
-    } else if (currentTopic !== document.querySelector('.topic').value) {
+    if (currentTopic !== document.querySelector('.topic').value) {
       console.log(
         `Topic changed from '${currentTopic}' to '${
           document.querySelector('.topic').value
@@ -133,7 +142,7 @@ const useNewBackgroundVideos = (responseJson) => {
       );
 
       clearInterval(videosLoop);
-      console.log('Cleared interval');
+      console.log('Cleared interval.');
       prevBackgrounds = [];
       currentTopic = document.querySelector('.topic').value;
       fetchBackgroundVideos(fetchUrl + document.querySelector('.topic').value);
