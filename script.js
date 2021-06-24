@@ -90,12 +90,32 @@ const findBestVideoQuality = (i, responseJson) => {
 
 const displayBackgroundVideo = (responseJson) => {
   let currentTopic = document.querySelector('.topic').value;
-  let currentVideoIndex = 0;
+  let currentVideoIndex = 1;
+
+  let bestQualityVideoIndex = findBestVideoQuality(0, responseJson);
+  source.src = responseJson.videos[0].video_files[bestQualityVideoIndex].link;
+  prevBackgrounds = [
+    responseJson.videos[0].video_files[bestQualityVideoIndex].link,
+  ];
+  video.load();
+  console.log(prevBackgrounds);
 
   var videoChanger = setInterval(() => {
     if (responseJson.videos.length === 0) {
       console.log(prevBackgrounds);
       console.log('No videos for this topic...');
+    } else if (currentTopic !== document.querySelector('.topic').value) {
+      console.log(
+        `Topic changed from '${currentTopic}' to '${
+          document.querySelector('.topic').value
+        }'. Clearing interval.`
+      );
+
+      clearInterval(videoChanger);
+      console.log('Cleared interval');
+      prevBackgrounds = [];
+      currentTopic = document.querySelector('.topic').value;
+      fetchBackgroundVideo(fetchUrl + document.querySelector('.topic').value);
     } else if (currentVideoIndex < responseJson.videos.length) {
       let bestQualityVideoIndex = findBestVideoQuality(
         currentVideoIndex,
@@ -132,19 +152,6 @@ const displayBackgroundVideo = (responseJson) => {
       currentVideoIndex = 1;
       video.load();
       console.log(prevBackgrounds);
-    }
-
-    console.log(
-      `Old: ${currentTopic}`,
-      `New: ${document.querySelector('.topic').value}`
-    );
-
-    if (currentTopic !== document.querySelector('.topic').value) {
-      clearInterval(videoChanger);
-      console.log('cleared interval');
-      prevBackgrounds = [];
-      currentTopic = document.querySelector('.topic').value;
-      fetchBackgroundVideo(fetchUrl + document.querySelector('.topic').value);
     }
   }, 20000);
 };
