@@ -1,6 +1,6 @@
 const body = document.body;
 
-const div = document.querySelector('.subtitles');
+const subtitlesDiv = document.querySelector('.subtitles');
 var video = document.querySelector('#background');
 var source = document.querySelector('source');
 
@@ -21,19 +21,23 @@ var source = document.querySelector('source');
 //   });
 
 /********** Subtitle Stuff **********/
-const exampleText = 'example';
 
-setInterval(() => {
-  if (div.innerText === '...') {
-    div.innerText = `${exampleText} `;
-  } else if (div.innerText.split(' ').length < 4) {
-    div.append(`${exampleText} `);
-  } else if (div.innerText.split(' ').length == 4) {
-    div.append(`${exampleText}`);
-  } else {
-    div.innerText = '...';
-  }
-}, 750);
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+
+const recognition = new SpeechRecognition();
+recognition.interimResults = true;
+// recognition.maxAlternatives = 1;
+
+recognition.onresult = (e) => {
+  subtitlesDiv.innerText = e.results[0][0].transcript;
+};
+
+recognition.onend = () => {
+  recognition.start();
+};
+
+recognition.start();
 
 /********** Background Stuff **********/
 
