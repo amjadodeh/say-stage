@@ -169,4 +169,21 @@ const useNewBackgroundVideos = (responseJson) => {
   }, 20000);
 };
 
+/********** Styling Stuff **********/
+
+document.querySelector('.topic').addEventListener('keydown', (e) => {
+  e.target.setAttribute(
+    'style',
+    `width: ${(e.target.value.length - 1) * 11}px`
+  );
+  setTimeout(() => {
+    e.target.setAttribute(
+      'style',
+      `width: ${(e.target.value.length - 1) * 11}px`
+    );
+  }, 10);
+});
+
+/********** The Chosen One **********/
+
 fetchBackgroundVideos(fetchUrl + document.querySelector('.topic').value);
