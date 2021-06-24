@@ -43,7 +43,7 @@ let prevBackgrounds = [];
 
 const fetchUrl = 'https://api.pexels.com/videos/search?query=';
 
-const fetchBackgroundVideo = (url) => {
+const fetchBackgroundVideos = (url) => {
   fetch(url, {
     method: 'get',
     headers: {
@@ -59,7 +59,7 @@ const fetchBackgroundVideo = (url) => {
         throw new Error('BAD HTTP stuff');
       }
     })
-    .then((json) => displayBackgroundVideo(json))
+    .then((json) => useNewBackgroundVideos(json))
     .catch((err) => {
       console.log(`Something went wrong: ${err.message}`);
     });
@@ -88,19 +88,40 @@ const findBestVideoQuality = (i, responseJson) => {
   return 1;
 };
 
-const displayBackgroundVideo = (responseJson) => {
+const changeBackgroundVideo = (responseJson, currentVideoIndex) => {
+  let bestQualityVideoIndex = findBestVideoQuality(
+    currentVideoIndex,
+    responseJson
+  );
+
+  source.src =
+    responseJson.videos[currentVideoIndex].video_files[
+      bestQualityVideoIndex
+    ].link;
+
+  if (currentVideoIndex === 0) {
+    prevBackgrounds = [
+      responseJson.videos[currentVideoIndex].video_files[bestQualityVideoIndex]
+        .link,
+    ];
+  } else {
+    prevBackgrounds.push(
+      responseJson.videos[currentVideoIndex].video_files[bestQualityVideoIndex]
+        .link
+    );
+  }
+
+  video.load();
+  console.log(prevBackgrounds);
+};
+
+const useNewBackgroundVideos = (responseJson) => {
   let currentTopic = document.querySelector('.topic').value;
   let currentVideoIndex = 1;
 
-  let bestQualityVideoIndex = findBestVideoQuality(0, responseJson);
-  source.src = responseJson.videos[0].video_files[bestQualityVideoIndex].link;
-  prevBackgrounds = [
-    responseJson.videos[0].video_files[bestQualityVideoIndex].link,
-  ];
-  video.load();
-  console.log(prevBackgrounds);
+  changeBackgroundVideo(responseJson, 0);
 
-  var videoChanger = setInterval(() => {
+  var videosLoop = setInterval(() => {
     if (responseJson.videos.length === 0) {
       console.log(prevBackgrounds);
       console.log('No videos for this topic...');
@@ -111,11 +132,11 @@ const displayBackgroundVideo = (responseJson) => {
         }'. Clearing interval.`
       );
 
-      clearInterval(videoChanger);
+      clearInterval(videosLoop);
       console.log('Cleared interval');
       prevBackgrounds = [];
       currentTopic = document.querySelector('.topic').value;
-      fetchBackgroundVideo(fetchUrl + document.querySelector('.topic').value);
+      fetchBackgroundVideos(fetchUrl + document.querySelector('.topic').value);
     } else if (currentVideoIndex < responseJson.videos.length) {
       let bestQualityVideoIndex = findBestVideoQuality(
         currentVideoIndex,
@@ -129,31 +150,14 @@ const displayBackgroundVideo = (responseJson) => {
           ].link
         )
       ) {
-        source.src =
-          responseJson.videos[currentVideoIndex].video_files[
-            bestQualityVideoIndex
-          ].link;
-        prevBackgrounds.push(
-          responseJson.videos[currentVideoIndex].video_files[
-            bestQualityVideoIndex
-          ].link
-        );
+        changeBackgroundVideo(responseJson, currentVideoIndex);
         currentVideoIndex += 1;
-        video.load();
-        console.log(prevBackgrounds);
       }
     } else {
-      let bestQualityVideoIndex = findBestVideoQuality(0, responseJson);
-      source.src =
-        responseJson.videos[0].video_files[bestQualityVideoIndex].link;
-      prevBackgrounds = [
-        responseJson.videos[0].video_files[bestQualityVideoIndex].link,
-      ];
+      changeBackgroundVideo(responseJson, 0);
       currentVideoIndex = 1;
-      video.load();
-      console.log(prevBackgrounds);
     }
   }, 20000);
 };
 
-fetchBackgroundVideo(fetchUrl + document.querySelector('.topic').value);
+fetchBackgroundVideos(fetchUrl + document.querySelector('.topic').value);
